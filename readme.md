@@ -1,4 +1,6 @@
-## Phase 1 - Setup
+# Phase 1
+
+## Setting up Kafka and Creating a Topic
 
 All steps are from within the root directory of the repository.
 
@@ -21,10 +23,18 @@ All steps are from within the root directory of the repository.
    python phase_1_streaming_infrastructure/create_topic.py
    ```
 
-5. Verify the topic creation by sending and receiving messages using the following in two separate terminal windows:
+## Producing and Consuming the Dataset
+
+1. Run the consumer script in one terminal to start receiving any future messages:
+
    ```bash
-   python -m phase_1_streaming_infrastructure.test_consumer
-   python -m phase_1_streaming_infrastructure.test_producer
+   python phase_1_streaming_infrastructure.consumer_dataset.py
    ```
 
-The receiver terminal should display the messages sent from the sender terminal, confirming that the Kafka topic is set up correctly.
+2. In another terminal, run the producer script to start sending rows from the dataset to the Kafka topic:
+
+   ```bash
+   python phase_1_streaming_infrastructure/producer_dataset.py
+   ```
+
+3. You should see the messages being sent by the producer and received by the consumer in their respective terminal windows.

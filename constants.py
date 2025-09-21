@@ -6,3 +6,6 @@ KAFKA_CLIENT_ID = "air_quality_admin"
 KAFKA_PRODUCER_CLIENT_ID = "air_quality_producer"
 KAFKA_CONSUMER_GROUP_ID = "air_quality_consumer_group"
 KAFKA_CONSUMER_CLIENT_ID = "air_quality_consumer"
+
+DATASET_PATH = "AirQualityUCI.csv"
+FAULTY_VALUE = -200
