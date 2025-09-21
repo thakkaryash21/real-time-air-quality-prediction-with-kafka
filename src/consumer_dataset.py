@@ -2,7 +2,7 @@ import json
 import os
 import pandas as pd
 from kafka import KafkaConsumer
-from constants import KAFKA_BROKER_URL, KAFKA_TOPIC, FAULTY_VALUE
+from .constants import KAFKA_BROKER_URL, KAFKA_TOPIC, FAULTY_VALUE
 from .logging_config import setup_logger
 
 

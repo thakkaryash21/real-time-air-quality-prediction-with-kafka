@@ -1,6 +1,4 @@
-# Phase 1
-
-## Setting up Kafka and Creating a Topic
+# Setting up Kafka and Creating a Topic
 
 All steps are from within the root directory of the repository.
 
@@ -20,21 +18,21 @@ All steps are from within the root directory of the repository.
 4. Run the create_topic.py script to create the Kafka topic:
 
    ```bash
-   python phase_1_streaming_infrastructure/create_topic.py
+   python -m src.create_topic
    ```
 
-## Producing and Consuming the Dataset
+# Producing and Consuming the Dataset
 
 1. Run the consumer script in one terminal to start receiving any future messages:
 
    ```bash
-   python phase_1_streaming_infrastructure.consumer_dataset.py
+   python -m src.consumer_dataset
    ```
 
 2. In another terminal, run the producer script to start sending rows from the dataset to the Kafka topic:
 
    ```bash
-   python phase_1_streaming_infrastructure/producer_dataset.py
+   python -m src/producer_dataset
    ```
 
 3. You should see the messages being sent by the producer and received by the consumer in their respective terminal windows.

@@ -1,6 +1,6 @@
 from kafka.admin import KafkaAdminClient, NewTopic
 
-from constants import (
+from .constants import (
     KAFKA_BROKER_URL,
     KAFKA_CLIENT_ID,
     KAFKA_NUM_PARTITIONS,
