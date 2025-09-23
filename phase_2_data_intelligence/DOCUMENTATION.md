@@ -114,22 +114,26 @@ Anomalies are defined as:
 
 These anomalies are critical both for model robustness (handling outliers) and for business intelligence (pollution event monitoring).
 
-## 6. Feature Engineering
+## 6. Modeling Strategy
 
-For predictive modeling in Phase 3, we created two datasets:
+Based on EDA findings, the following modeling strategy is proposed:
 
-- `train.csv` → cleaned dataset with raw variables.
-- `train_features.csv` → enriched dataset with engineered features.
+1. **Time-Series Dependencies**
 
-### Features engineered:
+   - ACF and PACF plots confirmed strong autocorrelations at 24-hour lags, indicating that lagged pollutant values should be engineered in Phase 3.
+   - Seasonal decomposition revealed clear daily and weekly cycles, suggesting that cyclical encodings (hour-of-day, day-of-week) will be critical features.
 
-1. **Lag features:** pollutant values at `t–1`, `t–24`, etc., capturing autocorrelation.
-2. **Rolling averages:** smoothed pollutant values over 3h/24h windows.
-3. **Cyclical encodings:** hour-of-day and day-of-week encoded as sine/cosine to preserve periodicity.
-4. **Weather interactions:** pollutant × temperature/humidity interaction terms to capture conditional dependencies.
+2. **Cross-Pollutant Relationships**
 
-**Rationale:**
-These features leverage the autocorrelation and correlation analyses performed, making the dataset suitable for both XGBoost and SARIMA.
+   - Strong correlations between CO, NOx, and C6H6 highlight that multivariate approaches or combined features may enhance model performance.
+
+3. **Weather Dependencies**
+
+   - Negative correlations with temperature and interactions with humidity suggest that meteorological variables should be incorporated as external regressors.
+
+4. **Model Choice Rationale**
+   - **SARIMA** is well-suited to capture autocorrelation and seasonality patterns identified.
+   - **XGBoost** can leverage engineered features (lags, rolling averages, cyclical encodings, weather variables) to model nonlinear relationships.
 
 ## 7. Analytical Insights & Business Intelligence
 
