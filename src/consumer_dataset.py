@@ -2,11 +2,12 @@ import json
 import os
 import pandas as pd
 from kafka import KafkaConsumer
-from .constants import KAFKA_BROKER_URL, KAFKA_TOPIC, FAULTY_VALUE
-from .logging_config import setup_logger
+from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, FAULTY_VALUE
+from .utils.logging_config import setup_logger
 
 
 logger = setup_logger(os.path.basename(__file__))
+APPEND_SIZE = 100  # Number of records to append to the df at once
 
 
 def clean_record(record):
@@ -41,7 +42,6 @@ def main():
     # 2. Container for streamed data
     df = pd.DataFrame()
     records = []
-    APPEND_SIZE = 100  # Number of records to append at once
 
     # 3. Consume loop
     try:

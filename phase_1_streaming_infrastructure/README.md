@@ -18,7 +18,7 @@ All steps are from within the root directory of the repository.
 4. Run the create_topic.py script to create the Kafka topic:
 
    ```bash
-   python -m src.create_topic
+   python -m src.utils.create_topic
    ```
 
 # Producing and Consuming the Dataset
@@ -32,7 +32,7 @@ All steps are from within the root directory of the repository.
 2. In another terminal, run the producer script to start sending rows from the dataset to the Kafka topic:
 
    ```bash
-   python -m src/producer_dataset
+   python -m src.producer_dataset
    ```
 
 3. You should see the messages being sent by the producer and received by the consumer in their respective terminal windows.

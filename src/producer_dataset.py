@@ -3,8 +3,8 @@ import os
 import time
 import json
 from kafka import KafkaProducer
-from .constants import KAFKA_BROKER_URL, KAFKA_TOPIC, DATASET_PATH
-from .logging_config import setup_logger
+from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, DATASET_PATH
+from .utils.logging_config import setup_logger
 
 logger = setup_logger(os.path.basename(__file__))
 
