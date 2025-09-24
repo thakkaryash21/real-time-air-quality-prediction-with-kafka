@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-
 import xgboost as xgb
 
 from ..utils.feature_utils import (
@@ -10,9 +9,7 @@ from ..utils.feature_utils import (
 )
 from ..utils.model_utils import save_model, evaluate, XGB_LAGS, XGB_ROLLS
 from ..utils.logging_config import setup_logger
-
 from ..utils.constants import TRAINING_DATA_PATH, XGB_MODEL_PATH
-
 
 logger = setup_logger(os.path.basename(__file__))
 
@@ -26,33 +23,35 @@ def create_features(df):
     df = add_rolling_features(df, TARGET, windows=XGB_ROLLS)
     df = add_cyclical_time_features(df)
 
-    # Drop rows with NaN after feature creation
-    df = df.dropna()
+    # Impute missing feature values (forward/back fill)
+    df = df.fillna(method="ffill").fillna(method="bfill")
 
     return df
 
 
 def main():
-    # 1. Load training data
+    # Load training data
     logger.info("Loading dataset...")
     df = pd.read_csv(TRAINING_DATA_PATH, parse_dates=["datetime"])
     df.set_index("datetime", inplace=True)
 
-    # 2. Feature engineering
+    # Drop rows with missing target only
+    df = df.dropna(subset=[TARGET])
+
+    # Feature engineering
     logger.info("Creating features...")
     df = create_features(df)
-    target = "CO(GT)"
-    feature_cols = [col for col in df.columns if col != target]
+    feature_cols = [col for col in df.columns if col != TARGET]
 
-    # 3. Train-validation split (time-based)
+    # Train-validation split (time-based)
     split_idx = int(len(df) * TRAIN_SPLIT_RATIO)
     train_df = df.iloc[:split_idx]
     val_df = df.iloc[split_idx:]
 
-    X_train, y_train = train_df[feature_cols], train_df[target]
-    X_val, y_val = val_df[feature_cols], val_df[target]
+    X_train, y_train = train_df[feature_cols], train_df[TARGET]
+    X_val, y_val = val_df[feature_cols], val_df[TARGET]
 
-    # 4. Train XGBoost model
+    # Train XGBoost model
     logger.info("Training XGBoost model...")
     model = xgb.XGBRegressor(
         n_estimators=500,
@@ -64,13 +63,12 @@ def main():
     )
     model.fit(X_train, y_train)
 
-    # 5. Evaluate model
+    # Evaluate model
     y_pred = model.predict(X_val)
     metrics = evaluate(y_val, y_pred)
-
     logger.info(f"Validation metrics: {metrics}")
 
-    # 6. Save model
+    # Save model
     save_model(model, XGB_MODEL_PATH)
     logger.info(f"XGBoost model saved to {XGB_MODEL_PATH}")
 
