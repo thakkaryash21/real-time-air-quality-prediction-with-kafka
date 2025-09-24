@@ -2,36 +2,50 @@ import json
 import os
 import pandas as pd
 from kafka import KafkaConsumer
-from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, FAULTY_VALUE
-from .utils.logging_config import setup_logger
 
+from .utils.constants import (
+    KAFKA_BROKER_URL,
+    KAFKA_TOPIC,
+    FAULTY_VALUE,
+    XGB_MODEL_PATH,
+)
+from .utils.logging_config import setup_logger
+from .train_scripts.xgboost import create_features
+from .utils.model_utils import load_model, XGB_LAGS, XGB_ROLLS
 
 logger = setup_logger(os.path.basename(__file__))
-APPEND_SIZE = 100  # Number of records to append to the df at once
+
+# Load trained model
+model = load_model(XGB_MODEL_PATH)
+logger.info(f"Loaded XGBoost model from {XGB_MODEL_PATH}")
+
+# Containers
+history_df = pd.DataFrame()
+# Warm-up period based on lags/rolls
+WARMUP_STEPS = max(max(XGB_LAGS), max(XGB_ROLLS))
+
+TARGET_COL = "CO(GT)"
 
 
 def clean_record(record):
     cleaned = {}
     for k, v in record.items():
-        # Convert datetime string back to pandas datetime
         if k == "datetime":
             cleaned[k] = pd.to_datetime(v, errors="coerce")
-
-        # Replace FAULTY_VALUE with NaN for non-numeric fields if needed
         elif isinstance(v, (int, float)) and v == FAULTY_VALUE:
             cleaned[k] = pd.NA
-
         else:
             cleaned[k] = v
     return cleaned
 
 
 def main():
-    # 1. Setup consumer
+    global history_df
+
     consumer = KafkaConsumer(
         KAFKA_TOPIC,
         bootstrap_servers=KAFKA_BROKER_URL,
-        auto_offset_reset="latest",  # read from latest messages
+        auto_offset_reset="latest",
         enable_auto_commit=True,
         group_id="air_quality_group",
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
@@ -39,29 +53,44 @@ def main():
 
     logger.info(f"Subscribed to topic: {KAFKA_TOPIC}")
 
-    # 2. Container for streamed data
-    df = pd.DataFrame()
-    records = []
-
-    # 3. Consume loop
     try:
         for message in consumer:
-            record = message.value
+            record = clean_record(message.value)
+            logger.debug(f"Received: {record}")
 
-            # Ensure that the row is not empty
-            if not record:
+            # Append new row
+            history_df = pd.concat(
+                [history_df, pd.DataFrame([record])], ignore_index=True
+            )
+            history_df.set_index("datetime", inplace=True)
+            history_df.sort_index(inplace=True)
+
+            # Wait until we have enough history
+            if len(history_df) < WARMUP_STEPS:
                 continue
 
-            # Clean the record
-            cleaned = clean_record(record)
-            records.append(cleaned)
+            # Get raw target before imputation
+            y_true = record.get(TARGET_COL, pd.NA)
 
-            logger.info(f"Received: {cleaned}")
+            # Feature engineering
+            feat_df = create_features(history_df.copy())
+            latest = feat_df.iloc[[-1]]
 
-            # Append to DataFrame only after collecting APPEND_SIZE records
-            if len(records) >= APPEND_SIZE:
-                df = pd.concat([df, pd.DataFrame(records)], ignore_index=True)
-                records = []
+            # Drop target before prediction
+            feature_cols = [c for c in latest.columns if c != TARGET_COL]
+            X_latest = latest[feature_cols]
+
+            # Predict
+            y_pred = model.predict(X_latest)[0]
+
+            if pd.notna(y_true):
+                logger.info(
+                    f"Prediction at {record['datetime']}: {y_pred:.4f} | Actual: {y_true}"
+                )
+            else:
+                logger.info(
+                    f"Prediction at {record['datetime']}: {y_pred:.4f} | Actual missing"
+                )
 
     except KeyboardInterrupt:
         logger.info("Consumer interrupted by user")
