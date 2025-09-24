@@ -19,12 +19,17 @@ TARGET = "CO(GT)"
 
 
 def create_features(df):
-    df = add_lag_features(df, TARGET, lags=XGB_LAGS)
-    df = add_rolling_features(df, TARGET, windows=XGB_ROLLS)
+    # Add lag/rolling features for each feature column except target
+    feature_cols = [col for col in df.columns if col != TARGET]
+
+    for col in feature_cols:
+        df = add_lag_features(df, col, lags=XGB_LAGS)
+        df = add_rolling_features(df, col, windows=XGB_ROLLS)
+
     df = add_cyclical_time_features(df)
 
-    # Impute missing feature values (forward/back fill)
-    df = df.fillna(method="ffill").fillna(method="bfill")
+    # Impute missing feature values
+    df = df.ffill().bfill()
 
     return df
 
