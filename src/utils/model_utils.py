@@ -3,6 +3,9 @@ import pickle
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
+XGB_LAGS = [1, 2, 24]
+XGB_ROLLS = [3, 24]
+
 
 def save_model(model, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)

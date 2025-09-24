@@ -8,7 +8,7 @@ from ..utils.feature_utils import (
     add_rolling_features,
     add_cyclical_time_features,
 )
-from ..utils.model_utils import save_model, evaluate
+from ..utils.model_utils import save_model, evaluate, XGB_LAGS, XGB_ROLLS
 from ..utils.logging_config import setup_logger
 
 from ..utils.constants import TRAINING_DATA_PATH, XGB_MODEL_PATH
@@ -22,8 +22,8 @@ TARGET = "CO(GT)"
 
 
 def create_features(df):
-    df = add_lag_features(df, TARGET, lags=[1, 2, 24])
-    df = add_rolling_features(df, TARGET, windows=[3, 24])
+    df = add_lag_features(df, TARGET, lags=XGB_LAGS)
+    df = add_rolling_features(df, TARGET, windows=XGB_ROLLS)
     df = add_cyclical_time_features(df)
 
     # Drop rows with NaN after feature creation
