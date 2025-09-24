@@ -3,22 +3,13 @@ import os
 import time
 import json
 from kafka import KafkaProducer
-from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, DATASET_PATH
+from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, TESTING_DATA_PATH
 from .utils.logging_config import setup_logger
 
 logger = setup_logger(os.path.basename(__file__))
 
 # 1. Load dataset
-df = pd.read_csv(DATASET_PATH, sep=";", decimal=",")
-# Drop empty columns from the dataset. Without the column name, they may not represent
-# useful information. So, dropping them
-df = df.dropna(axis=1, how="all")
-
-# Combine Date and Time into a single datetime column
-df["datetime"] = pd.to_datetime(
-    df["Date"] + " " + df["Time"], format="%d/%m/%Y %H.%M.%S"
-)
-df.drop(columns=["Date", "Time"], inplace=True)
+df = pd.read_csv(TESTING_DATA_PATH, parse_dates=["datetime"])
 
 # 2. Setup producer
 producer = KafkaProducer(
