@@ -29,7 +29,7 @@ def create_features(df):
     df = add_cyclical_time_features(df)
 
     # Impute missing feature values
-    df = df.ffill().bfill()
+    df = df.ffill()
 
     return df
 

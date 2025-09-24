@@ -7,6 +7,7 @@ from .utils.constants import KAFKA_BROKER_URL, KAFKA_TOPIC, TESTING_DATA_PATH
 from .utils.logging_config import setup_logger
 
 logger = setup_logger(os.path.basename(__file__))
+DELAY_BETWEEN_MESSAGES = 0.5  # seconds
 
 # 1. Load dataset
 df = pd.read_csv(TESTING_DATA_PATH, parse_dates=["datetime"])
@@ -28,7 +29,7 @@ try:
         except Exception as e:
             logger.error(f"Error sending message: {e}")
 
-        time.sleep(1)  # Simulate real-time by waiting 1 second between messages
+        time.sleep(DELAY_BETWEEN_MESSAGES)
 except KeyboardInterrupt:
     logger.info("Producer interrupted by user")
 finally:
